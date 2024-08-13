@@ -3,6 +3,10 @@
 #include <fstream>
 #include <sstream>
 
+#include <SFML/Graphics.hpp>
+#include "imgui.h"
+#include "imgui-SFML.h"
+
 // Classes for shapes
 class Shape {
 public:
@@ -91,7 +95,7 @@ Configuration LoadConfiguration(std::string& configurationPath) {
 				>> circle.r >> circle.g >> circle.b >> circle.radius;
 
 			circle.print();
-			config.shapes.push_back(std::make_shared<Circle>(circle));
+			config.shapes.push_back(std::make_shared<Circle>(circle)); // Adds shape to shapes vector
 		}
 		else if (dataType == "Rectangle") {
 			Rectangle rectangle;
@@ -100,7 +104,7 @@ Configuration LoadConfiguration(std::string& configurationPath) {
 				>> rectangle.r >> rectangle.g >> rectangle.b >> rectangle.width >> rectangle.height;
 
 			rectangle.print();
-			config.shapes.push_back(std::make_shared<Rectangle>(rectangle));
+			config.shapes.push_back(std::make_shared<Rectangle>(rectangle)); // Adds shape to shapes vector
 		}
 		else if (dataType == "Font") {
 			iss >> config.font.path >> config.font.size >> config.font.r >> config.font.g >> config.font.b;
@@ -116,5 +120,24 @@ Configuration LoadConfiguration(std::string& configurationPath) {
 int main(int argc, char* argv[]) {
 	std::string configurationPath = "config.txt";
 	auto config = LoadConfiguration(configurationPath);
-	std::cin.get();
+
+	sf::RenderWindow window(sf::VideoMode(config.window.width, config.window.height), "2D SFML Shape Renderer");
+	window.setFramerateLimit(60);
+
+	// Initialise ImGUI and create a clock used for its internal timing
+	ImGui::SFML::Init(window);
+	sf::Clock deltaClock;
+
+	// Scale the ImGui UI by a given factor, does not affect text size
+	ImGui::GetStyle().ScaleAllSizes(1.0f);
+
+	// The ImGui colour {r,g,b} wheel requires floats from 0-1 rather than integers from 0-255
+	float c[3] = { 0.0f, 1.0f, 1.0f };
+
+	// Main game loop
+	while (window.isOpen()) {
+
+		window.display();
+	}
+	ImGui::SFML::Shutdown();
 }
