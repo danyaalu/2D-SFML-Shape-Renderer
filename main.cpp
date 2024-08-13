@@ -20,11 +20,30 @@ public:
 	float radius;
 	int segments = 64;
 
+	void print() {
+		std::cout << "Circle created: "
+			<< name << " "
+			<< posX << " " << posY << " "
+			<< speedX << " " << speedY << " "
+			<< r << " " << g << " " << b << " "
+			<< radius
+			<< std::endl;
+	}
 };
 
 class Rectangle : public Shape {
 public:
 	float width, height;
+
+	void print() {
+		std::cout << "Rectangle created: "
+			<< name << " "
+			<< posX << " " << posY << " "
+			<< speedX << " " << speedY << " "
+			<< r << " " << g << " " << b << " "
+			<< width << " " << height
+			<< std::endl;
+	}
 };
 
 // --------------------------------------------------------------------------
@@ -69,16 +88,18 @@ Configuration LoadConfiguration(std::string& configurationPath) {
 			Circle circle;
 
 			iss >> circle.name >> circle.posX >> circle.posY >> circle.speedX >> circle.speedY
-				>> circle.r >> circle.g >> circle.g >> circle.radius;
+				>> circle.r >> circle.g >> circle.b >> circle.radius;
 
+			circle.print();
 			config.shapes.push_back(std::make_shared<Circle>(circle));
 		}
 		else if (dataType == "Rectangle") {
 			Rectangle rectangle;
 
 			iss >> rectangle.name >> rectangle.posX >> rectangle.posY >> rectangle.speedX >> rectangle.speedY
-				>> rectangle.r >> rectangle.g >> rectangle.g >> rectangle.width >> rectangle.height;
+				>> rectangle.r >> rectangle.g >> rectangle.b >> rectangle.width >> rectangle.height;
 
+			rectangle.print();
 			config.shapes.push_back(std::make_shared<Rectangle>(rectangle));
 		}
 		else if (dataType == "Font") {
@@ -95,4 +116,5 @@ Configuration LoadConfiguration(std::string& configurationPath) {
 int main(int argc, char* argv[]) {
 	std::string configurationPath = "config.txt";
 	auto config = LoadConfiguration(configurationPath);
+	std::cin.get();
 }
