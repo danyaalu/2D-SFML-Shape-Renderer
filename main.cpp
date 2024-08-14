@@ -2,6 +2,7 @@
 #include <vector>
 #include <fstream>
 #include <sstream>
+#include <memory>
 
 #include <SFML/Graphics.hpp>
 #include "imgui.h"
@@ -17,6 +18,7 @@ public:
 	bool shapeDrawn = true;
 
 	Shape() {}
+	virtual ~Shape() {}
 };
 
 class Circle : public Shape {
@@ -134,9 +136,69 @@ int main(int argc, char* argv[]) {
 	// The ImGui colour {r,g,b} wheel requires floats from 0-1 rather than integers from 0-255
 	float c[3] = { 0.0f, 1.0f, 1.0f };
 
+	// Create a single string with all shape names separated by '\0'
+	std::string shapeNamesStr;
+	for (const auto& shape : config.shapes) {
+		shapeNamesStr += shape->name + '\0';
+	}
+	shapeNamesStr += '\0'; // Double-null terminate the string
+
+	// Store the index of the selected shape
+	int selectedShapeIndex = 0;
+
 	// Main game loop
 	while (window.isOpen()) {
+		// Event handling
+		sf::Event event;
+		
+		while (window.pollEvent(event)) {
+			ImGui::SFML::ProcessEvent(event);
 
+			if (event.type == sf::Event::Closed) {
+				window.close();
+			}
+		}
+
+		// Start a new ImGui frame
+		ImGui::SFML::Update(window, deltaClock.restart());
+
+		// Create a window called "Debug Panel" and use it to display the ImGui widgets
+		ImGui::Begin("Debug Panel");
+		ImGui::Text("Parameters of shapes");
+
+		// Use the constructed string in the ImGui::Combo function
+		ImGui::Combo("Shapes", &selectedShapeIndex, shapeNamesStr.c_str());
+
+		// Display and modify parameters of the selected shape
+		auto selectedShape = config.shapes[selectedShapeIndex];
+		ImGui::Checkbox(("Draw " + selectedShape->name).c_str(), &selectedShape->shapeDrawn);
+		
+		// Check if the selected shape is a Circle
+		if (auto circle = std::dynamic_pointer_cast<Circle>(selectedShape)) {
+			ImGui::SliderFloat("Size", &circle->radius, 0.0f, 255.0f);
+		}
+		// Check if the selected shape is a Rectangle
+		else if (auto rectangle = std::dynamic_pointer_cast<Rectangle>(selectedShape)) {
+			// Set a custom width for the sliders
+			ImGui::PushItemWidth(237.0f); // Adjust the width as needed
+
+			ImGui::SliderFloat("##", &rectangle->width, 0.0f, 200.0f);
+			ImGui::SameLine();
+			ImGui::SliderFloat("Size", &rectangle->height, 0.0f, 200.0f);
+
+			// Restore the default item width
+			ImGui::PopItemWidth();
+		}
+
+		ImGui::ColorEdit3("Colour", c);
+		ImGui::End();
+
+		// Clear the window
+		window.clear();
+
+		// ## TODO: Add drawing shapes ##
+
+		ImGui::SFML::Render(window);
 		window.display();
 	}
 	ImGui::SFML::Shutdown();
