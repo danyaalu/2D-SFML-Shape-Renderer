@@ -14,7 +14,7 @@ public:
 	std::string name;
 	float posX, posY;
 	float speedX, speedY;
-	int r, g, b;
+	float r, g, b;
 	bool shapeDrawn = true;
 
 	Shape() {}
@@ -175,28 +175,69 @@ int main(int argc, char* argv[]) {
 		
 		// Check if the selected shape is a Circle
 		if (auto circle = std::dynamic_pointer_cast<Circle>(selectedShape)) {
-			ImGui::SliderFloat("Size", &circle->radius, 0.0f, 255.0f);
+			ImGui::SliderFloat("Size##Radius", &circle->radius, 0.0f, 255.0f);
+
+			// For colour ------------------------------
+			// Set a custom width for the sliders
+			ImGui::PushItemWidth(155.0f); // Adjust the width as needed
+
+			ImGui::SliderFloat("##Red", &circle->r, 0.0f, 255.0f);
+			ImGui::SameLine();
+			ImGui::SliderFloat("##Green", &circle->g, 0.0f, 255.0f);
+			ImGui::SameLine();
+			ImGui::SliderFloat("Colour#Blue", &circle->b, 0.0f, 255.0f);
+
+			// Restore the default item width
+			ImGui::PopItemWidth();
 		}
 		// Check if the selected shape is a Rectangle
 		else if (auto rectangle = std::dynamic_pointer_cast<Rectangle>(selectedShape)) {
 			// Set a custom width for the sliders
 			ImGui::PushItemWidth(237.0f); // Adjust the width as needed
 
-			ImGui::SliderFloat("##", &rectangle->width, 0.0f, 200.0f);
+			ImGui::SliderFloat("##Width", &rectangle->width, 0.0f, 200.0f);
 			ImGui::SameLine();
-			ImGui::SliderFloat("Size", &rectangle->height, 0.0f, 200.0f);
+			ImGui::SliderFloat("Size##Height", &rectangle->height, 0.0f, 200.0f);
+
+			// Restore the default item width
+			ImGui::PopItemWidth();
+
+			// For colour ------------------------------
+			// Set a custom width for the sliders
+			ImGui::PushItemWidth(155.0f); // Adjust the width as needed
+
+			ImGui::SliderFloat("##Red", &rectangle->r, 0.0f, 255.0f);
+			ImGui::SameLine();
+			ImGui::SliderFloat("##Green", &rectangle->g, 0.0f, 255.0f);
+			ImGui::SameLine();
+			ImGui::SliderFloat("Colour#Blue", &rectangle->b, 0.0f, 255.0f);
 
 			// Restore the default item width
 			ImGui::PopItemWidth();
 		}
 
-		ImGui::ColorEdit3("Colour", c);
 		ImGui::End();
 
 		// Clear the window
 		window.clear();
 
-		// ## TODO: Add drawing shapes ##
+		// Draw shapes
+		for (const auto& shape : config.shapes) {
+			if (shape->shapeDrawn) {
+				if (auto circle = std::dynamic_pointer_cast<Circle>(shape)) {
+					sf::CircleShape circleShape(circle->radius, circle->segments);
+					circleShape.setPosition(circle->posX, circle->posY);
+					circleShape.setFillColor(sf::Color(circle->r, circle->g, circle->b));
+					window.draw(circleShape);
+				}
+				else if (auto rectangle = std::dynamic_pointer_cast<Rectangle>(shape)) {
+					sf::RectangleShape rectangleShape(sf::Vector2f(rectangle->width, rectangle->height));
+					rectangleShape.setPosition(rectangle->posX, rectangle->posY);
+					rectangleShape.setFillColor(sf::Color(rectangle->r, rectangle->g, rectangle->b));
+					window.draw(rectangleShape);
+				}
+			}
+		}
 
 		ImGui::SFML::Render(window);
 		window.display();
