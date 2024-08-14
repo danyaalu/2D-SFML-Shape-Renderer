@@ -230,6 +230,17 @@ int main(int argc, char* argv[]) {
 			ImGui::SliderFloat("Size##Radius", &circle->radius, 0.0f, 255.0f);
 			ImGui::SliderFloat("Segments##Segments", &circle->segments, 0.0f, 64.0f);
 
+
+			// Set a custom width for the sliders
+			ImGui::PushItemWidth(237.0f); // Adjust the width as needed
+
+			ImGui::SliderFloat("##SpeedX", &circle->speedX, -5.0f, 5.0f);
+			ImGui::SameLine();
+			ImGui::SliderFloat("Speed##SpeedY", &circle->speedY, -5.0f, 5.0f);
+
+			// Restore the default item width
+			ImGui::PopItemWidth();
+
 			// For colour ------------------------------
 			// Set a custom width for the sliders
 			ImGui::PushItemWidth(155.0f); // Adjust the width as needed
@@ -251,6 +262,10 @@ int main(int argc, char* argv[]) {
 			ImGui::SliderFloat("##Width", &rectangle->width, 0.0f, 200.0f);
 			ImGui::SameLine();
 			ImGui::SliderFloat("Size##Height", &rectangle->height, 0.0f, 200.0f);
+
+			ImGui::SliderFloat("##SpeedX", &rectangle->speedX, -5.0f, 5.0f);
+			ImGui::SameLine();
+			ImGui::SliderFloat("Speed##SpeedY", &rectangle->speedY, -5.0f, 5.0f);
 
 			// Restore the default item width
 			ImGui::PopItemWidth();
@@ -278,11 +293,18 @@ int main(int argc, char* argv[]) {
 		for (const auto& shape : config.shapes) {
 			if (shape->shapeDrawn) {
 				if (auto circle = std::dynamic_pointer_cast<Circle>(shape)) {
+					circle->circle.setRadius(circle->radius);
+					circle->circle.setPointCount(circle->segments);
+					circle->circle.setFillColor(sf::Color(circle->r, circle->g, circle->b));
 					UpdatePosition(shape, window);
+					circle->circle.setPosition(circle->posX, circle->posY);
 					window.draw(circle->circle);
 				}
 				else if (auto rectangle = std::dynamic_pointer_cast<Rectangle>(shape)) {
+					rectangle->rectangle.setSize(sf::Vector2f(rectangle->width, rectangle->height));
+					rectangle->rectangle.setFillColor(sf::Color(rectangle->r, rectangle->b, rectangle->g));
 					UpdatePosition(shape, window);
+					rectangle->rectangle.setPosition(rectangle->posX, rectangle->posY);
 					window.draw(rectangle->rectangle);
 				}
 			}
