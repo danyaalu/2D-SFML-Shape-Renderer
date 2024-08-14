@@ -24,7 +24,8 @@ public:
 class Circle : public Shape {
 public:
 	float radius;
-	int segments = 64;
+	float segments = 64.0f;
+	sf::CircleShape circle;
 
 	void print() {
 		std::cout << "Circle created: "
@@ -40,6 +41,7 @@ public:
 class Rectangle : public Shape {
 public:
 	float width, height;
+	sf::RectangleShape rectangle;
 
 	void print() {
 		std::cout << "Rectangle created: "
@@ -119,6 +121,41 @@ Configuration LoadConfiguration(std::string& configurationPath) {
 	return config;
 }
 
+void UpdatePosition(const std::shared_ptr<Shape> shape, const sf::RenderWindow& window) {
+	// Update position
+	shape->posX += shape->speedX;
+	shape->posY += shape->speedY;
+
+	// Check for collision with the window boundaries and reverse the direction of the respective axis
+	if (auto circle = std::dynamic_pointer_cast<Circle>(shape)) {
+		float left = circle->posX  ;
+		float right = circle->posX + (circle->radius * 2);
+		float top = circle->posY ;
+		float bottom = circle->posY + (circle->radius * 2);
+
+
+		if (left < 0 || right > window.getSize().x) {
+			shape->speedX *= -1;
+		}
+		if (top < 0 || bottom > window.getSize().y) {
+			shape->speedY *= -1;
+		}
+	}
+	else if (auto rectangle = std::dynamic_pointer_cast<Rectangle>(shape)) {
+		float left = rectangle->posX;
+		float right = rectangle->posX + rectangle->width;
+		float top = rectangle->posY;
+		float bottom = rectangle->posY + rectangle->height;
+
+		if (left < 0 || right > window.getSize().x) {
+			shape->speedX *= -1;
+		}
+		if (top < 0 || bottom > window.getSize().y) {
+			shape->speedY *= -1;
+		}
+	}
+}
+
 int main(int argc, char* argv[]) {
 	std::string configurationPath = "config.txt";
 	auto config = LoadConfiguration(configurationPath);
@@ -145,6 +182,21 @@ int main(int argc, char* argv[]) {
 
 	// Store the index of the selected shape
 	int selectedShapeIndex = 0;
+
+	// Create shape objects
+	for (const auto& shape : config.shapes) {
+		if (shape->shapeDrawn) {
+			if (auto circle = std::dynamic_pointer_cast<Circle>(shape)) {
+				circle->circle = sf::CircleShape(circle->radius, circle->segments);
+				circle->circle.setFillColor(sf::Color(circle->r, circle->g, circle->b));
+			}
+			else if (auto rectangle = std::dynamic_pointer_cast<Rectangle>(shape)) {
+				rectangle->rectangle = sf::RectangleShape(sf::Vector2f(rectangle->width, rectangle->height));
+				rectangle->rectangle.setFillColor(sf::Color(rectangle->r, rectangle->g, rectangle->b));
+			}
+		}
+	}
+
 
 	// Main game loop
 	while (window.isOpen()) {
@@ -176,6 +228,7 @@ int main(int argc, char* argv[]) {
 		// Check if the selected shape is a Circle
 		if (auto circle = std::dynamic_pointer_cast<Circle>(selectedShape)) {
 			ImGui::SliderFloat("Size##Radius", &circle->radius, 0.0f, 255.0f);
+			ImGui::SliderFloat("Segments##Segments", &circle->segments, 0.0f, 64.0f);
 
 			// For colour ------------------------------
 			// Set a custom width for the sliders
@@ -185,7 +238,7 @@ int main(int argc, char* argv[]) {
 			ImGui::SameLine();
 			ImGui::SliderFloat("##Green", &circle->g, 0.0f, 255.0f);
 			ImGui::SameLine();
-			ImGui::SliderFloat("Colour#Blue", &circle->b, 0.0f, 255.0f);
+			ImGui::SliderFloat("Colour##Blue", &circle->b, 0.0f, 255.0f);
 
 			// Restore the default item width
 			ImGui::PopItemWidth();
@@ -210,7 +263,7 @@ int main(int argc, char* argv[]) {
 			ImGui::SameLine();
 			ImGui::SliderFloat("##Green", &rectangle->g, 0.0f, 255.0f);
 			ImGui::SameLine();
-			ImGui::SliderFloat("Colour#Blue", &rectangle->b, 0.0f, 255.0f);
+			ImGui::SliderFloat("Colour##Blue", &rectangle->b, 0.0f, 255.0f);
 
 			// Restore the default item width
 			ImGui::PopItemWidth();
@@ -225,16 +278,12 @@ int main(int argc, char* argv[]) {
 		for (const auto& shape : config.shapes) {
 			if (shape->shapeDrawn) {
 				if (auto circle = std::dynamic_pointer_cast<Circle>(shape)) {
-					sf::CircleShape circleShape(circle->radius, circle->segments);
-					circleShape.setPosition(circle->posX, circle->posY);
-					circleShape.setFillColor(sf::Color(circle->r, circle->g, circle->b));
-					window.draw(circleShape);
+					UpdatePosition(shape, window);
+					window.draw(circle->circle);
 				}
 				else if (auto rectangle = std::dynamic_pointer_cast<Rectangle>(shape)) {
-					sf::RectangleShape rectangleShape(sf::Vector2f(rectangle->width, rectangle->height));
-					rectangleShape.setPosition(rectangle->posX, rectangle->posY);
-					rectangleShape.setFillColor(sf::Color(rectangle->r, rectangle->g, rectangle->b));
-					window.draw(rectangleShape);
+					UpdatePosition(shape, window);
+					window.draw(rectangle->rectangle);
 				}
 			}
 		}
